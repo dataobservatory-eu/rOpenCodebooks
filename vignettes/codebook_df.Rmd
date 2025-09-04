@@ -1,13 +1,13 @@
----
+```
 title: "codebook_df"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{codebook_df}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
----
+```
 
-```{r, include = FALSE}
+```{r setupvignette, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -17,3 +17,224 @@ knitr::opts_chunk$set(
 ```{r setup}
 library(opencodebooks)
 ```
+
+
+This vignette demonstrates the UX of defining a codebook entirely in R with:
+
+```
+new_codebook_df(concepts, scheme_meta)
+```
+- **`concepts`**: a data frame where each row is a concept (category) with columns like:
+  - `concept_id` *(character, required)* — URI-fragment-safe id (e.g., `scale-4-agree`)
+  - `pref_label` *(character, required)* — human label (language-specific)
+  - `notation` *(character, required)* — compact code used in data (e.g., `AG`)
+  - `language` *(character, required)* — ISO code (e.g., `en`)
+  - `position` *(integer, optional)* — numeric rank for ordered scales
+  - `is_missing` *(logical, optional)* — mark DK/Refused categories
+  - `definition`, `exact_match` *(optional)* — text or external URIs
+
+- **`scheme_meta`**: metadata for the ConceptScheme and its document:
+  - `doc_uri` *(required)* — base document IRI (hash URIs are minted under this)
+  - `scheme_id` *(required)* — short identifier of the scheme/family
+  - `scheme_fragment` *(optional)* — fragment id when one document holds multiple schemes (e.g., `scale-3`, `scale-4`, `scale-5`)
+  - `version` *(required)* — e.g., `v1`
+  - `label` *(required)* — human name of the scheme
+
+This vignette builds **3-, 4-, and 5-point agreement** scales, validates them, and shows how they link to a response variable.
+
+
+## Create a 4-point agreement codebook
+
+We define rows for the 4-point scale and pass them to `new_codebook_df()` with minimal `scheme_meta`.
+
+```{r 4pointscale}
+rows4 <- data.frame(
+  concept_id = c("scale-4-totally_agree", "scale-4-agree",
+                 "scale-4-disagree", "scale-4-totally_disagree"),
+  pref_label = c("Totally agree", "Agree", "Disagree", "Totally disagree"),
+  label_type = "pref",
+  notation   = c("TA", "AG", "DI", "TD"),
+  position   = c(4, 3, 2, 1),
+  language   = "en",
+  is_missing = FALSE,
+  stringsAsFactors = FALSE
+)
+
+scheme_meta4 <- list(
+  doc_uri         = "https://yourname.github.io/codelists/cap-agreement/v1",
+  scheme_id       = "cap_agreement",
+  scheme_fragment = "scale-4",
+  version         = "v1",
+  label           = "Agreement (4-point)"
+)
+
+cb4 <- new_codebook_df(concepts = rows4, scheme_meta = scheme_meta4)
+```
+
+Print it out: 
+
+```{r print4}
+cb4
+```
+
+Inspect its attributes:
+
+```{r inspect4}
+attr(cb4, "scheme_meta")
+```
+
+
+```{r}
+dataset::get_bibentry(cb4)
+```
+Let's extend this codebook with preferred labels in another _natural language_. `Teljesen egyetértek` is not an alternative label for `Totally agree`. It is the same label, but it is not expressed in English but Hungarian. 
+
+
+```{r extendhu}
+rows4_hu <- transform(
+  rows4,
+  language   = "hu",
+  pref_label = c(
+    "Teljesen egyetértek",        # TA
+    "Egyetértek",                 # AG
+    "Nem értek egyet",            # DI
+    "Egyáltalán nem értek egyet"  # TD
+  )
+)
+```
+An *alternative label* is a synonym of a preferred label in a given language. Fore example, some questionnaires may have the label `Agree` other `I agree`.  Both mean the same thing: if the respondent chooses this item on a 4-point agreement scale, the respondent expresses `Agree` as opposed to `Totally agree` or any level of disagreement. Alternative labels can be added to preferred labels with binding new rows. Each alternative label is specific to a certain preferred label in a given language. 
+
+
+```{r altlabel}
+# Example synonym in English for "Agree"
+rows4_en_alt <- rows4[rows4$concept_id == "scale-4-agree", ]
+rows4_en_alt$pref_label <- "I agree"
+rows4_en_alt$label_type <- "alt"
+
+rows4_en_alt
+```
+
+```{r printextendedcodebook}
+cb4 <- new_codebook_df(rbind(rows4, rows4_hu), scheme_meta4)
+cb4
+```
+
+
+## Create 3-point and 5-point variants (same family document)
+
+To keep a single human page showing all scales, reuse the same `doc_uri` and vary only the rows and the `scheme_fragment`.
+
+```{r 3pointscale}
+rows3 <- data.frame(
+  concept_id = c("scale-3-agree", "scale-3-neither", "scale-3-disagree"),
+  pref_label = c("Agree", "Neither agree nor disagree", "Disagree"),
+  notation   = c("AG", "NE", "DI"),
+  position   = c(3, 2, 1),
+  language   = "en",
+  is_missing = FALSE
+)
+
+cb3 <- new_codebook_df(
+  rows3,
+  list(
+    doc_uri         = "https://yourname.github.io/codelists/cap-agreement/v1",
+    scheme_id       = "cap_agreement",
+    scheme_fragment = "scale-3",
+    version         = "v1",
+    label           = "Agreement (3-point)"
+  )
+)
+```
+
+```{r 5pointscale}
+rows5 <- data.frame(
+  concept_id = c("scale-5-totally_agree","scale-5-agree","scale-5-neither",
+                 "scale-5-disagree","scale-5-totally_disagree"),
+  pref_label = c("Totally agree","Agree","Neither agree nor disagree","Disagree","Totally disagree"),
+  notation   = c("TA","AG","NE","DI","TD"),
+  position   = c(5,4,3,2,1),
+  language   = "en",
+  is_missing = FALSE
+)
+
+cb5 <- new_codebook_df(
+  rows5,
+  list(
+    doc_uri         = "https://yourname.github.io/codelists/cap-agreement/v1",
+    scheme_id       = "cap_agreement",
+    scheme_fragment = "scale-5",
+    version         = "v1",
+    label           = "Agreement (5-point)"
+  )
+)
+
+list(cb3 = nrow(cb3), cb4 = nrow(cb4), cb5 = nrow(cb5))
+```
+
+## Validate the codebooks
+
+Basic validations: unique IDs, safe identifiers, required fields present.
+
+```
+validate_codebook_df(cb3)
+validate_codebook_df(cb4)
+validate_codebook_df(cb5)
+```
+
+```
+
+## Link a response variable to a scheme
+
+Attach URIs to variables in your response dataset so validators/exporters know which codebook they reference.
+
+```
+set.seed(42)
+responses <- dataset_df(data.frame(
+  q1_agree = sample(c("TA","AG","DI","TD"), size = 50, replace = TRUE),
+  stringsAsFactors = FALSE
+))
+
+variable_uri  <- "https://example.org/study/EB_87_4/variable/q1_agree"
+code_list_uri <- attr(cb4, "scheme_meta")$doc_uri  # family doc; exporter will pair with fragment "scale-4"
+
+responses <- link_variable(responses, "q1_agree", variable_uri, code_list_uri)
+
+# Validate categorical coverage
+codebooks <- setNames(list(cb4), code_list_uri)
+validate_categoricals(responses, codebooks)
+
+
+## (Optional) “Where used” metadata
+
+Record where a scheme is used (studies, variables) for human pages and RDF. Publishers can aggregate these per scheme.
+
+```
+cb4$where_used_study_uri <- NA_character_
+cb4$where_used_study_uri[cb4$concept_id == "scale-4-agree"] <- "https://example.org/study/EB_87_4"
+cb4$where_used_var_id    <- NA_character_
+cb4$where_used_var_id[cb4$concept_id == "scale-4-agree"] <- "q1_agree"
+
+cb4[, c("concept_id","where_used_study_uri","where_used_var_id")]
+```
+
+## (Optional) Publish (HTML + Turtle)
+
+Publishing requires Mustache templates (shipped with the package) and is one call per codebook or per “family”.
+
+```
+# publish_codebook_hash(
+#   cb4,
+#   out_dir = "cap-agreement/v1/scale-4",
+#   templates_dir = system.file("templates", package = "opencodebooks"),
+#   html = TRUE, ttl = TRUE
+# )
+
+# Or later, a family helper (multi-scheme in one doc):
+# publish_family(list(cb3, cb4, cb5), out_dir = "cap-agreement/v1", templates_dir = ...)
+```
+
+
+## API
+
+
+

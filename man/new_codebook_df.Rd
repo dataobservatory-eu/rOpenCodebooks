@@ -2,20 +2,101 @@
 % Please edit documentation in R/new_codebook_df.R
 \name{new_codebook_df}
 \alias{new_codebook_df}
-\title{Create a new codebook dataset}
+\title{codebook_df: a lightweight subclass of dataset_df for codelists}
 \usage{
-new_codebook_df(concepts, scheme_meta)
+new_codebook_df(concepts, scheme_meta, bib = "datacite", bib_args = list())
 }
 \arguments{
-\item{concepts}{A data.frame with columns: concept_id, pref_label, notation,
-language. Optional: position, is_missing, exact_match, definition.}
+\item{concepts}{A \code{data.frame} with at least the required columns above.}
 
-\item{scheme_meta}{A named list with metadata: doc_uri, scheme_id,
-scheme_fragment (optional), version, label.}
+\item{scheme_meta}{A named list with metadata:
+\itemize{
+\item \code{doc_uri} (character, required): base document IRI used for hash URIs.
+\item \code{scheme_id} (character, required): short identifier of the scheme family.
+\item \code{scheme_fragment} (character, optional): fragment id of this ConceptScheme
+when multiple schemes share one document (e.g., \code{"scale-3"}, \code{"scale-4"}).
+\item \code{version} (character, required): human version label (e.g., \code{"v1"}).
+\item \code{label} (character, required): human-readable scheme title.
+}}
+
+\item{bib}{Either \code{"datacite"} (default) or \code{"dublincore"}. Controls the
+default bibliographic record attached as \code{dataset_bibentry}.}
+
+\item{bib_args}{A named list of fields to override in the default
+bibliographic record (e.g., \code{creator}, \code{publisher}, \code{publication_year},
+\code{rights}, \code{identifier}, etc.).}
 }
 \value{
 An object of class \code{codebook_df}, extending \code{dataset_df}.
 }
 \description{
-Define a codebook as a dataset_df object with metadata and concepts.
+\code{codebook_df()} objects are plain tabular data (one row per concept)
+with \strong{codebook-specific metadata}:
+\itemize{
+\item \code{scheme_meta} (document URI, scheme identifier, version, label, optional fragment)
+\item \code{dataset_bibentry} (a bibliographic record; \strong{DataCite} by default)
+}
+
+They print with concept URIs and key fields (notation, label, language, order),
+and can be rendered to HTML/Turtle via templating.
+}
+\section{Required columns in \code{concepts}}{
+
+\itemize{
+\item \code{concept_id} (character): URI-fragment-safe id, e.g. \code{"scale-4-agree"}.
+\item \code{pref_label} (character): human-readable label.
+\item \code{notation} (character): short code used in data (e.g. \code{"AG"}).
+\item \code{language} (character): ISO 639-1 (e.g. \code{"en"}).
+}
+}
+
+\section{Optional columns}{
+
+\itemize{
+\item \code{position} (integer): order for ordinal scales.
+\item \code{is_missing} (logical): mark DK/Refused/NA categories.
+\item \code{definition} (character): short definition or usage note.
+\item \code{exact_match} (character): external URI(s) for mappings.
+}
+}
+
+\examples{
+# Minimal two-concept example (EN only)
+rows <- data.frame(
+  concept_id = c("yes", "no"),
+  pref_label = c("Yes", "No"),
+  notation   = c("Y", "N"),
+  language   = "en",
+  position   = c(2L, 1L),
+  is_missing = FALSE,
+  stringsAsFactors = FALSE
+)
+
+meta <- list(
+  doc_uri         = "https://example.org/codelists/yesno/v1",
+  scheme_id       = "yesno",
+  scheme_fragment = "binary",
+  version         = "v1",
+  label           = "Yes/No (binary)"
+)
+
+cb <- new_codebook_df(rows, meta,
+                      bib = "datacite",
+                      bib_args = list(
+                        creator = "Doe, Jane",
+                        publisher = "Data Observatory",
+                        rights = "MIT"
+                      ))
+
+cb                 # prints with concept URIs and key fields
+
+# Multilingual label: bind another language row for the same concept_id
+rows_hu <- transform(rows, language = "hu",
+                     pref_label = c("Igen", "Nem"))
+cb_hu <- new_codebook_df(rbind(rows, rows_hu), meta)
+cb_hu
+
+}
+\seealso{
+\code{\link[dataset:datacite]{dataset::datacite()}}, \code{\link[dataset:dublincore]{dataset::dublincore()}}
 }

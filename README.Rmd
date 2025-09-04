@@ -1,0 +1,51 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# rOpenCodebooks
+
+<!-- badges: start -->
+[![dataobservatory](https://img.shields.io/badge/ecosystem-dataobservatory.eu-3EA135.svg)](https://dataobservatory.eu/)
+<!-- badges: end -->
+
+The goal of `rOpenCodebooks` is to a minimal interface to define codebooks as data frames or CSV files and publish them as human-readable HTML and machine-readable SKOS/Turtle with stable hash URIs.
+
+## Installation
+
+You can install the development version of rOpenCodebooks from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("dataobservatory-eu/opencodebooks")
+```
+
+## OpenCodebooks
+
+`OpenCodebooks` is not just a package — it’s a pattern.  
+The idea is that **codebooks should be as open and portable as the data they describe**.
+
+- **Hash URIs**: Every category gets a stable, citable identifier.  
+- **Minimal**: Define codebooks in a plain CSV or data frame.  
+- **Templated**: Render them into human-readable HTML and machine-readable Turtle (SKOS).  
+- **Static**: Publish on GitHub Pages, GitLab Pages, or any static host. No server config.  
+
+
+```{r example}
+library(opencodebooks)
+## basic example code
+```
+
+What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so.
+
+

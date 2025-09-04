@@ -1,0 +1,28 @@
+Package: opencodebooks
+Title: Create and Publish Open Codebooks for Categorical Data
+Version: 0.0.0.9000
+Language: en-GB
+Authors@R: 
+    c(person(given = "Daniel", family = "Antal", 
+           email = "daniel.antal@dataobservatory.eu", 
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0001-7513-6760")
+           )
+      )
+Description: Provides a minimal interface to define codebooks as data frames or CSV
+    files and publish them as human-readable HTML and machine-readable SKOS/Turtle
+    with stable hash URIs. Codebooks can be linked to datasets created with the
+    'dataset' package and harmonized with 'retroharmonize'. This is the reference
+    implementation of the 'Open Codebooks' approach, designed to be easily
+    replicated in other languages.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports: 
+    dataset,
+    whisker
+Suggests: 
+    markdown,
+    rdflib,
+    testthat

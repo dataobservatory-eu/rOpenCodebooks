@@ -1,6 +1,6 @@
 Package: opencodebooks
 Title: Create and Publish Open Codebooks for Categorical Data
-Version: 0.0.0.9000
+Version: 0.0.0.9001
 Language: en-GB
 Authors@R: 
     c(person(given = "Daniel", family = "Antal", 
@@ -24,7 +24,10 @@ Imports:
     utils,
     whisker
 Suggests: 
+    knitr,
     markdown,
     rdflib,
+    rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+VignetteBuilder: knitr

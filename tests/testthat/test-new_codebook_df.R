@@ -39,7 +39,7 @@ test_that("constructor validates concept_id as URI-fragment-safe", {
   bad$concept_id[1] <- "bad id!"    # space + exclamation
   expect_error(
     new_codebook_df(bad, min_meta),
-    "Invalid concept_id"
+    "Invalid `concept_id"
   )
 })
 

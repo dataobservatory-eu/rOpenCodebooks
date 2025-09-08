@@ -84,7 +84,7 @@ attr(cb4, "scheme_meta")
 ```
 
 
-```{r}
+```{r bibrecord}
 dataset::get_bibentry(cb4)
 ```
 Let's extend this codebook with preferred labels in another _natural language_. `Teljesen egyetértek` is not an alternative label for `Totally agree`. It is the same label, but it is not expressed in English but Hungarian. 

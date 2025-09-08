@@ -80,7 +80,8 @@ new_codebook_df <- function(concepts,
                             bib = "datacite",
                             bib_args = list()) {
   stopifnot(is.data.frame(concepts))
-  .require_cols(concepts, c("concept_id", "pref_label", "notation", "language"))
+  .require_cols(concepts, c("concept_id", "pref_label",
+                            "notation", "language"))
   .check_ids(concepts$concept_id)
 
   # Build default bibliographic record
@@ -122,7 +123,6 @@ datacite_default <- function(scheme_meta, bib_args = list()) {
     PublicationYear       = bib_args$publication_year %||%
       as.integer(format(Sys.Date(), "%Y")),
     Type                  = bib_args$resource_type %||% "Codebook (codelist)",
-    ResourceTypeGeneral   = bib_args$resource_type_general %||% "Dataset",
     Version               = bib_args$version %||% scheme_meta$version,
     Rights                = bib_args$rights %||%
       getOption("opencodebooks.license", "MIT"),
@@ -144,10 +144,10 @@ datacite_default <- function(scheme_meta, bib_args = list()) {
 dublincore_default <- function(scheme_meta, bib_args = list()) {
   dataset::dublincore(
     title        = scheme_meta$label,
-    creator      = bib_args$creator %||% "Unknown",
+    creator      = bib_args$creator %||% person("Unknown"),
     publisher    = bib_args$publisher %||%
       getOption("opencodebooks.publisher", "Self-published"),
-    date         = bib_args$date %||% as.integer(format(Sys.Date(), "%Y")),
+    dataset_date = bib_args$date %||% as.integer(format(Sys.Date(), "%Y")),
     description  = bib_args$description,
     identifier   = bib_args$identifier,
     rights       = bib_args$rights %||%
@@ -210,9 +210,6 @@ print.codebook_df <- function(x, ...) {
 }
 
 # --- small internal helpers ----------------------------------------------------
-
-#' @keywords internal
-`%||%` <- function(a, b) if (!is.null(a)) a else b
 
 #' @keywords internal
 .require_cols <- function(df, needed) {
